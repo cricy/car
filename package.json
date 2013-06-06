@@ -1,0 +1,25 @@
+{
+  "name": "car",
+  "version": "0.0.1",
+  "description": "car",
+  "main": "index.html",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "car "
+  },
+  "dependencies": {
+    "expect.js" : "0.2.0",
+    "seajs" : "2.0.0"
+  },
+  "devDependencies": {
+    "mocha": "*"
+  },
+  "repository": "",
+  "keywords": [
+    "car"
+  ],
+  "author": "cricy",
+  "license": "MIT"
+}
