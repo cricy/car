@@ -4,13 +4,13 @@
  *  date: 2013-06-05
  */
 
-define(function(require, exports) {
+define(function(require, exports, module) {
 
     function Car (options) {
-        this.config = options || {
-            speed : 5,
+        this.options = options || {
+            speed : 100,
             size : {
-                width : 20,
+                width : 30,
                 height: 50
             },
             position : {
@@ -30,19 +30,18 @@ define(function(require, exports) {
     Car.prototype.start = function(){
         var now = Date.now();
         this.distance = 0;
-        this.speed = this.config.speed || 0;
+        this.speed = this.options.speed || 0;
         this.startTime = now;
         // 加速时间点
         this.accelerateTime = null;
 
         // 匀速开始时间点
         this.evenSpeedTime = this.speed ? now : null;
-        this.minSpeed = this.config.minSpeed ||10;
-        this.maxSpeed = this.config.maxSpeed ||100;
+        this.minSpeed = this.options.minSpeed ||10;
+        this.maxSpeed = this.options.maxSpeed ||500;
 
         // 加速度  单位是秒: s
-        this.accelerateUnit = this.config.accelerateUnit ||10;
-        this.currentAccelerateUnit = this.config.accelerateUnit ||10;
+        this.accelerateUnit = this.options.accelerateUnit ||10;
     };
 
     Car.prototype.restart = function(){
@@ -53,12 +52,13 @@ define(function(require, exports) {
     Car.prototype.startAccelerate = function(a){
         var now = Date.now();
         var self = this;
-        this.currentAccelerateUnit = a || this.accelerateUnit;
+        this.accelerateUnit = a ||this.accelerateUnit;
         this._saveEvenDistance(now);
         this.accelerateTime = now;
+        this.evenSpeedTime = null;
 
         // 1000/60
-        if((this.maxSpeed && this.currentAccelerateUnit > 0) || (this.minSpeed >=0 && this.currentAccelerateUnit < 0)){
+        if((this.maxSpeed && this.accelerateUnit > 0) || (this.minSpeed >=0 && this.accelerateUnit < 0)){
             this.limitSpeed();
         }
     };
@@ -66,8 +66,8 @@ define(function(require, exports) {
     // 最高限速
     Car.prototype.limitSpeed = function(){
         var self = this;
-        var speed = this.currentAccelerateUnit > 0 ? this.maxSpeed : this.minSpeed;
-        var time = Math.abs((speed -this.speed)/this.currentAccelerateUnit);
+        var speed = this.accelerateUnit > 0 ? this.maxSpeed : this.minSpeed;
+        var time = Math.abs((speed -this.speed)/this.accelerateUnit);
         this.limitSpeedTimeout = setTimeout( function(){self.stopAccelerate() }, time * 1000);
     };
 
@@ -79,7 +79,7 @@ define(function(require, exports) {
 
 
         var now = Date.now();
-        var accelerate = this._calculateAccelerate(this.accelerateTime, now, this.speed, this.currentAccelerateUnit);
+        var accelerate = this._calculateAccelerate(this.accelerateTime, now, this.speed, this.accelerateUnit);
 
         this.distance += accelerate.distance;
         this.speed = accelerate.speed;
@@ -93,7 +93,7 @@ define(function(require, exports) {
         var now = time || Date.now();
         var distance = 0;
         if(this.accelerateTime){
-            distance = this._calculateAccelerate(this.accelerateTime, now, this.speed, this.currentAccelerateUnit).distance;
+            distance = this._calculateAccelerate(this.accelerateTime, now, this.speed, this.accelerateUnit).distance;
         }else{
             distance = this._calculateEvenDistance(this.evenSpeedTime, now,this.speed);
         }
@@ -104,10 +104,20 @@ define(function(require, exports) {
     Car.prototype.currentSpeed = function(time){
         var now = time || Date.now();
         if(this.accelerateTime){
-            return this._calculateAccelerate(this.accelerateTime, now,this.speed, this.currentAccelerateUnit).speed;
+            return this._calculateAccelerate(this.accelerateTime, now,this.speed, this.accelerateUnit).speed;
         }else{
             return this.speed;
         }
+    };
+
+    //  设置速度
+    Car.prototype.setSpeed = function(speed){
+        if(this.accelerateTime){
+            this.stopAccelerate();
+        };
+        this.speed = speed;
+        this.evenSpeedTime = Date.now();
+
     };
 
     //  保存匀速距离
@@ -125,25 +135,65 @@ define(function(require, exports) {
         var distance = parseInt((nowspeed + speed)/2 * costTime, 10);
         return {time : costTime, speed: nowspeed, distance:distance};
 
-    }
+    };
 
     //  计算匀速距离
     Car.prototype._calculateEvenDistance = function(beginTime, endTime, speed ){
-        return parseInt(speed * (endTime - beginTime) /1000, 10);
+        if(beginTime && endTime && speed){
+            return parseInt(speed * (endTime - beginTime) /1000, 10);
+        }else{
+            return 0;
+        }
     };
 
+    // 暂停
+    Car.prototype.suspend = function(time){
+        var now = Date.now() || time;
+        this.is_suspend = true;
+        if(this.accelerateTime){
+            this.stopAccelerate(now);
+            this.is_suspend = {accelerate : true};
+        }else if(this.evenSpeedTime){
+            this.distance += this._calculateEvenDistance(this.evenSpeedTime, now, this.speed);
+        }
 
+        this.evenSpeedTime = null;
+        this.accelerateTime = null;
+    };
+
+    // 继续
+    Car.prototype.goOn = function(time){
+        var now = Date.now() || time;
+        if(this.is_suspend){
+            if(this.is_suspend.accelerate){
+                this.startAccelerate();
+            }else{
+                this.evenSpeedTime = now;
+            }
+        }
+        delete this.is_suspend;
+    };
 
 
     Car.prototype.draw = function(ctx) {
-        // body...
+        var position = this.options.position;
+        var size = this.options.size;
 
+        // background
+        ctx.save();
+        ctx.fillStyle = "yellow";
+        ctx.fillRect(position.x - size.width/2, position.y - size.height/2, size.width, size.height);
+        ctx.restore();
 
 
     };
 
-    exports.Car = Car;
+    Car.prototype.status = function(){
+        console.log("speed:" +  this.speed +"  distance:" + this.distance + "   accelerateUnit:" + this.accelerateUnit + "   evenSpeedTime:" + this.evenSpeedTime);
+    };
 
+    // exports.Car = Car;
+    module.exports = Car;
 });
 
 

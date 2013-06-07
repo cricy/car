@@ -1,6 +1,6 @@
 
 require('seajs');
-var Car = require('../js/car').Car;
+var Car = require('../js/car');
 var expect = require('expect.js');
 
 
@@ -24,7 +24,7 @@ describe('Car', function(){
     });
 
     describe('#Accelerate()', function(){
-        this.timeout(60000);
+        this.timeout(20000);
 
         it('get start speed', function(){
             car.restart();
@@ -75,7 +75,7 @@ describe('Car', function(){
             car.restart();
             car.speed = 100;
             car.startAccelerate(-40);
-            expect(car.currentAccelerateUnit).to.be(-40);
+            expect(car.accelerateUnit).to.be(-40);
             setTimeout(function(){
                 var now = Date.now();
                 //  minSpeed: 10
@@ -88,6 +88,78 @@ describe('Car', function(){
                 expect(car.currentDistance(now)).to.be.lessThan(132.5);
                 done();
             } ,3000);
+        });
+
+    });
+
+    describe('#suspend() and goOn()', function(){
+        this.timeout(20000);
+        it('get start speed', function(){
+            car.restart();
+            car.speed = 5;
+            expect(car.distance).to.be(0);
+            expect(car.currentDistance()).to.be(0);
+        });
+
+        it('get suspend', function(done){
+            setTimeout(function(){
+                done();
+                car.suspend();
+                // distance = 5 *2  = 10
+                expect(car.currentDistance()).to.be(10);
+                expect(car.currentSpeed()).to.be(5);
+            } ,2000);
+        });
+
+        it('get goOn', function(done){
+            setTimeout(function(){
+                done();
+                car.goOn();
+                // distance = 5 *2  = 10
+                expect(car.currentDistance()).to.be(10);
+            } ,2000);
+        });
+
+        it('get startAccelerate', function(done){
+            setTimeout(function(){
+                done();
+                car.startAccelerate(20);
+                // distance = 10 + 5 *2  = 20
+                expect(car.currentDistance()).to.be(20);
+                expect(car.currentSpeed()).to.be(5);
+            } ,2000);
+        });
+
+        it('get suspend startAccelerate', function(done){
+            setTimeout(function(){
+                done();
+                car.suspend();
+                // distance = 20 + 15  = 35
+                expect(car.currentDistance()).to.be(35);
+                expect(car.currentSpeed()).to.be(25);
+            } ,1000);
+        });
+
+        it('get goOn startAccelerate', function(done){
+            setTimeout(function(){
+                done();
+                car.goOn();
+                // distance = 20 + 15  = 35
+                expect(car.currentDistance()).to.be(35);
+                expect(car.currentSpeed()).to.be(25);
+            } ,2000);
+        });
+
+        it('get check', function(done){
+            setTimeout(function(){
+                done();
+                // distance = 35 + 90 = 135
+                // accelerate: 20
+                // speed = 25 + 2*20 = 65
+                expect(car.currentDistance()).to.be(125);
+                expect(car.currentSpeed()).to.be(65);
+                car.startAccelerate()
+            } ,2000);
         });
 
     });
