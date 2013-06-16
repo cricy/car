@@ -8,7 +8,7 @@ define(function(require, exports, module) {
 
     function Car (options) {
         this.options = options || {
-            speed : 100,
+            speed : 5,
             size : {
                 width : 30,
                 height: 50
@@ -16,7 +16,10 @@ define(function(require, exports, module) {
             position : {
                 x : 0,
                 y : 0
-            }
+            },
+            minSpeed: 10,
+            maxSpeed:500,
+            accelerateUnit: 10 // 每秒加速度
         };
 
 
@@ -37,11 +40,11 @@ define(function(require, exports, module) {
 
         // 匀速开始时间点
         this.evenSpeedTime = this.speed ? now : null;
-        this.minSpeed = this.options.minSpeed ||10;
-        this.maxSpeed = this.options.maxSpeed ||500;
+        this.minSpeed = this.options.minSpeed;
+        this.maxSpeed = this.options.maxSpeed;
 
         // 加速度  单位是秒: s
-        this.accelerateUnit = this.options.accelerateUnit ||10;
+        this.accelerateUnit = this.options.accelerateUnit;
     };
 
     Car.prototype.restart = function(){
@@ -112,11 +115,18 @@ define(function(require, exports, module) {
 
     //  设置速度
     Car.prototype.setSpeed = function(speed){
+        var now = Date.now();
         if(this.accelerateTime){
             this.stopAccelerate();
         };
-        this.speed = speed;
+        if(this.maxSpeed && speed > this.maxSpeed){
+            speed = this.maxSpeed;
+        }else if( speed < this.minSpeed){
+            speed = this.minSpeed;
+        }
+        this.distance += this._calculateEvenDistance(this.evenSpeedTime, now, this.speed);
         this.evenSpeedTime = Date.now();
+        this.speed = speed;
 
     };
 
@@ -178,14 +188,49 @@ define(function(require, exports, module) {
     Car.prototype.draw = function(ctx) {
         var position = this.options.position;
         var size = this.options.size;
+        ctx = this.ctx = ctx || this.ctx;
 
         // background
         ctx.save();
+        ctx.beginPath();
         ctx.fillStyle = "yellow";
         ctx.fillRect(position.x - size.width/2, position.y - size.height/2, size.width, size.height);
         ctx.restore();
+    };
 
+    // 判断是否碰撞
+    Car.prototype.isInCarScope = function(ctx, cars){
+        var position = this.options.position;
+        var size = this.options.size;
 
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(position.x - size.width/2, position.y - size.height/2, size.width, size.height);
+        if(cars instanceof Array){
+            for(var i=0, l= cars.length; i< l;i++){
+                var rectangleXY = cars[i].getRectangleXY();
+                for(var ii=0, jj=rectangleXY.length; ii<jj;ii++){
+                    if(ctx.isPointInPath(rectangleXY[ii].x, rectangleXY[ii].y)){
+                        return {index:i,o : cars[i]};
+                    }
+                }
+            }
+        }else if(ctx.isPointInPath(cars.x, cars.y)){
+            return true;
+        }
+        return false;
+    };
+
+    // 获取四个顶点坐标
+    Car.prototype.getRectangleXY = function(){
+        var position = this.options.position;
+        var size = this.options.size;
+
+        return [{ x: position.x - size.width/2, y:position.y - size.height/2},
+            {x: position.x + size.width/2, y:position.y - size.height/2},
+            {x: position.x - size.width/2, y:position.y + size.height/2},
+            {x: position.x + size.width/2, y:position.y + size.height/2}
+        ];
     };
 
     Car.prototype.status = function(){

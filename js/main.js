@@ -20,9 +20,19 @@ define(function(require) {
     window.c = new Canvas("car_canvas");
     c.render();
 
+    document.addEventListener("keydown", function(e){
+        c.onKeyDown(e);
+    });
+
+    document.addEventListener("keyup", function(e){
+        c.onKeyUp(e);
+    });
+
     function draw(){
         c.draw();
-        requestAnimFrame(draw);
+        if(!c.gameOver){
+            requestAnimFrame(draw);
+        }
     }
 
     requestAnimFrame(draw);
