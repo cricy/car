@@ -26,6 +26,7 @@ define(function(require, exports, module) {
         this.traffic = new Traffic();
         this.mycar = new Car();
         this.traffic = new Traffic();
+        this.key_status = {};
     };
 
     Canvas.prototype.render = function(){
@@ -63,19 +64,36 @@ define(function(require, exports, module) {
         ctx.save();
         ctx.fillStyle = "white";
         ctx.font = "italic "+14+"pt Arial ";
-        ctx.fillText("速度:" + this.mycar.currentSpeed(), 220,150);
+        ctx.fillText("速度: " + this.mycar.currentSpeed(), 220,150);
         ctx.fillText("距离:" + this.mycar.currentDistance(), 220,180);
+        ctx.fillText("等级:" + this.traffic.level, 220,210);
         if(this.gameOver){
-            ctx.fillText("你超过了:" + this.traffic.overCars, 220,210);
-            ctx.fillText("等级:" + this.traffic.level, 220,240);
+            ctx.fillText("你超过了:" + this.traffic.overCars, 220,240);
         }
         ctx.restore();
     }
 
     Canvas.prototype.carChangeLane = function(arrow){
+        var self = this;
 
         var moveUnit = 20;
-        this.mycar.options.position.x = this.sureCarInRoad(this.mycar.options.position.x, arrow ? moveUnit : -moveUnit);
+        var x = this.sureCarInRoad(this.mycar.options.position.x, arrow ? moveUnit : -moveUnit);
+
+        clearInterval(self.key_status.change_lane_timer);
+        self.key_status.change_lane_timer = setInterval(function(){
+            var s = 2;
+            if(self.key_status.left){
+                s = -s;
+            }
+            if(self.key_status.right || self.key_status.left ){
+                self.mycar.options.position.x += s;
+                self.mycar.options.position.x = self.sureCarInRoad(self.mycar.options.position.x, 0);
+            }else{
+                clearInterval(self.key_status.change_lane_timer);
+            }
+        },16);
+
+        // this.mycar.changeLane(x);
     };
 
     Canvas.prototype.sureCarInRoad = function(x, moveUnit){
@@ -105,22 +123,36 @@ define(function(require, exports, module) {
 
     Canvas.prototype.onKeyDown = function(e){
         var self = this;
+        console.log(e.keyCode)
         switch(e.keyCode){
             case 39:  // right
                 e.preventDefault();
-                this.carChangeLane(true);
+                if(!self.key_status.right){
+                    self.key_status.right = true;
+                    self.carChangeLane();
+                }
                 break;
             case 37:  // left
                 e.preventDefault();
-                this.carChangeLane(false);
+                if(!self.key_status.left){
+                    self.key_status.left = true;
+                    self.carChangeLane();
+                }
                 break;
             case 38:  // up
                 e.preventDefault();
+                if(!self.key_status.up){
+                    self.key_status.up = true;
+                    self.setCarSpeed();
+                }
                 this.setCarSpeed(true);
                 break;
             case 40:  // down
                 e.preventDefault();
-                this.setCarSpeed(false);
+                if(!self.key_status.down){
+                    self.key_status.down = true;
+                    self.setCarSpeed();
+                }
                 break;
             default:
                 break;
@@ -128,7 +160,27 @@ define(function(require, exports, module) {
     };
 
     Canvas.prototype.onKeyUp = function(e){
-
+        var self = this;
+        switch(e.keyCode){
+            case 39:  // right
+                e.preventDefault();
+                self.key_status.right = false;
+                break;
+            case 37:  // left
+                e.preventDefault();
+                self.key_status.left = false;
+                break;
+            case 38:  // up
+                e.preventDefault();
+                self.key_status.up = false;
+                break;
+            case 40:  // down
+                e.preventDefault();
+                self.key_status.down = false;
+                break;
+            default:
+                break;
+        }
     };
 
     module.exports = Canvas;

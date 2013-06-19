@@ -38,6 +38,8 @@ define(function(require, exports, module) {
         // 加速时间点
         this.accelerateTime = null;
 
+        this.change_lane = null;
+
         // 匀速开始时间点
         this.evenSpeedTime = this.speed ? now : null;
         this.minSpeed = this.options.minSpeed;
@@ -182,6 +184,37 @@ define(function(require, exports, module) {
             }
         }
         delete this.is_suspend;
+    };
+
+    // change lane
+    Car.prototype.changeLane = function(x){
+        var self = this;
+        var position = self.options.position;
+
+        console.log(x)
+
+        var cl = self.change_lane || {};
+        cl.to_x = x;
+        self.change_lane = cl;
+        var timer = cl.change_timer;
+        cl.change_timer = setInterval(function(){
+            console.log(Date.now())
+            if(cl.to_x > position.x){
+                position.x ++;
+                console.log(position.x + "+++" + cl.to_x)
+            }else if(cl.to_x < position.x){
+                position.x --;
+                console.log(position.x + "---")
+            }else{
+                console.log(position.x + ".....")
+                clearInterval(cl.change_timer);
+                delete cl;
+                delete self.change_lane;
+            }
+        }, 16);
+
+        clearInterval(timer);
+
     };
 
 

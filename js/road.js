@@ -54,7 +54,7 @@ define(function(require, exports, module) {
         this._draw_line(offset.x + allwidth, offset.y,offset.x + allwidth, height);
 
         for(var i=1,l=this.options.lane; i<l; i++){
-            this._draw_line(offset.x + i*this.options.unitWidth, laneLineY,offset.x + i*this.options.unitWidth, roadHeight, true);
+            this._draw_dash_line(offset.x + i*this.options.unitWidth, laneLineY,offset.x + i*this.options.unitWidth, roadHeight);
         }
     };
 
@@ -65,11 +65,7 @@ define(function(require, exports, module) {
         ctx.beginPath();
         ctx.moveTo(x,y);
         ctx.lineTo(x2,y2);
-        if(dashed){
-            ctx.setLineDash(this.options.dash);
-        }else{
-            // ctx.setLineDash(null);
-        }
+
         ctx.strokeStyle = this.LINE_COLOR;
         ctx.lineWidth = this.LINE_WIDTH;
         // ctx.closePath();
@@ -77,6 +73,26 @@ define(function(require, exports, module) {
         ctx.restore();
     };
 
+    Road.prototype._draw_dash_line = function(x,y,x2,y2){
+        var ctx = this.ctx;
+        var dash = this.options.dash;
+        ctx.save();
+        ctx.beginPath();
+        if(ctx.setLineDash){
+            ctx.moveTo(x,y);
+            ctx.lineTo(x2,y2);
+            ctx.setLineDash(dash);
+        }else{
+            for(var i=y; i < y2; i= i + dash[0] + dash[1]){
+                ctx.moveTo(x,i);
+                ctx.lineTo(x,i + dash[0]);
+            }
+        }
+        ctx.strokeStyle = this.LINE_COLOR;
+        ctx.lineWidth = this.LINE_WIDTH;
+        ctx.stroke();
+        ctx.restore();
+    };
 
     module.exports = Road;
 });
