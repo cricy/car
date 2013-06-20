@@ -73,11 +73,8 @@ define(function(require, exports, module) {
         ctx.restore();
     }
 
-    Canvas.prototype.carChangeLane = function(arrow){
+    Canvas.prototype.carChangeLane = function(){
         var self = this;
-
-        var moveUnit = 20;
-        var x = this.sureCarInRoad(this.mycar.options.position.x, arrow ? moveUnit : -moveUnit);
 
         clearInterval(self.key_status.change_lane_timer);
         self.key_status.change_lane_timer = setInterval(function(){
@@ -93,7 +90,6 @@ define(function(require, exports, module) {
             }
         },16);
 
-        // this.mycar.changeLane(x);
     };
 
     Canvas.prototype.sureCarInRoad = function(x, moveUnit){
@@ -115,15 +111,18 @@ define(function(require, exports, module) {
         }
     };
 
-    Canvas.prototype.setCarSpeed = function(arrow){
-        var speedUnit = 5;
-        this.mycar.setSpeed(this.mycar.speed + (arrow ? speedUnit : -speedUnit * 4));
+    Canvas.prototype.startAccelerateCar = function(arrow){
+        var self = this;
+        var speedUnit = 30;
+        if(this.key_status.down){
+            speedUnit =  -speedUnit * 3;
+        }
+        this.mycar.startAccelerate(speedUnit);
     };
 
 
     Canvas.prototype.onKeyDown = function(e){
         var self = this;
-        console.log(e.keyCode)
         switch(e.keyCode){
             case 39:  // right
                 e.preventDefault();
@@ -143,15 +142,14 @@ define(function(require, exports, module) {
                 e.preventDefault();
                 if(!self.key_status.up){
                     self.key_status.up = true;
-                    self.setCarSpeed();
+                    self.startAccelerateCar();
                 }
-                this.setCarSpeed(true);
                 break;
             case 40:  // down
                 e.preventDefault();
                 if(!self.key_status.down){
                     self.key_status.down = true;
-                    self.setCarSpeed();
+                    self.startAccelerateCar();
                 }
                 break;
             default:
@@ -173,10 +171,12 @@ define(function(require, exports, module) {
             case 38:  // up
                 e.preventDefault();
                 self.key_status.up = false;
+                self.mycar.stopAccelerate();
                 break;
             case 40:  // down
                 e.preventDefault();
                 self.key_status.down = false;
+                self.mycar.stopAccelerate();
                 break;
             default:
                 break;

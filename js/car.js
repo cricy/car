@@ -81,11 +81,12 @@ define(function(require, exports, module) {
     // 停止加速
     Car.prototype.stopAccelerate = function(){
         clearTimeout(this.limitSpeedTimeout);
-
+        if(!this.accelerateTime){
+            return;
+        }
 
         var now = Date.now();
         var accelerate = this._calculateAccelerate(this.accelerateTime, now, this.speed, this.accelerateUnit);
-
         this.distance += accelerate.distance;
         this.speed = accelerate.speed;
         this.accelerateTime = null;
