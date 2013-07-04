@@ -111,13 +111,74 @@ define(function(require, exports, module) {
         }
     };
 
-    Canvas.prototype.startAccelerateCar = function(arrow){
+    Canvas.prototype.startAccelerateCar = function(){
         var self = this;
-        var speedUnit = 30;
-        if(this.key_status.down){
-            speedUnit =  -speedUnit * 3;
+        var speedUnit = 30, speed = 0;
+        if(this.key_status.up){
+            speed = speedUnit;
+        }else if(this.key_status.down){
+            speed =  -speedUnit * 3;
         }
-        this.mycar.startAccelerate(speedUnit);
+        if(speed !== 0){
+            this.mycar.startAccelerate(speed);
+        }
+    };
+
+    Canvas.prototype.eventHandle = function(e){
+        var self = this;
+        switch(e.target){
+            case "right":
+                if(e.data && !self.key_status.right){
+                    self.key_status.right = true;
+                    self.carChangeLane();
+                }else if(!e.data){
+                    self.key_status.right = false;
+                }
+                break;
+
+            case "left":
+                if(e.data && !self.key_status.left){
+                    self.key_status.left = true;
+                    self.carChangeLane();
+                }else if(!e.data){
+                    self.key_status.left = false;
+                }
+                break;
+            case "norightleft":
+                self.key_status.left = false;
+                self.key_status.right = false;
+                break;
+            case "up":
+                if(e.data){
+                    if(!self.key_status.up){
+                        self.key_status.up = true;
+                        self.startAccelerateCar();
+                    }
+                    self.key_status.up = true;
+                }else{
+                    if(self.key_status.up){
+                        self.key_status.up = false;
+                        self.mycar.stopAccelerate();
+                    }
+                }
+                break;
+
+            case "down":
+                if(e.data){
+                    if(!self.key_status.down){
+                        self.key_status.down = true;
+                        self.startAccelerateCar();
+                    }
+                    self.key_status.down = true;
+                }else{
+                    if(self.key_status.down){
+                        self.key_status.down = false;
+                        self.mycar.stopAccelerate();
+                    }
+                }
+
+                break;
+        }
     };
 
 

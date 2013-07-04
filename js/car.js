@@ -57,6 +57,11 @@ define(function(require, exports, module) {
     Car.prototype.startAccelerate = function(a){
         var now = Date.now();
         var self = this;
+
+        if(this.accelerateTime){
+            this.stopAccelerate(now);
+        }
+
         this.accelerateUnit = a ||this.accelerateUnit;
         this._saveEvenDistance(now);
         this.accelerateTime = now;
@@ -79,13 +84,13 @@ define(function(require, exports, module) {
 
 
     // 停止加速
-    Car.prototype.stopAccelerate = function(){
+    Car.prototype.stopAccelerate = function(now){
         clearTimeout(this.limitSpeedTimeout);
         if(!this.accelerateTime){
             return;
         }
 
-        var now = Date.now();
+        now = now || Date.now();
         var accelerate = this._calculateAccelerate(this.accelerateTime, now, this.speed, this.accelerateUnit);
         this.distance += accelerate.distance;
         this.speed = accelerate.speed;
