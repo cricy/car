@@ -173,7 +173,9 @@ define(function(require, exports, module) {
                 }else{
                     if(self.key_status.down){
                         self.key_status.down = false;
-                        self.mycar.stopAccelerate();
+                        if(!self.key_status.up){
+                            self.mycar.stopAccelerate();
+                        }
                     }
                 }
 
