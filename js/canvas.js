@@ -64,6 +64,9 @@ define(function(require, exports, module) {
         ctx.save();
         ctx.fillStyle = "white";
         ctx.font = "italic "+14+"pt Arial ";
+        if(this.fps){
+            ctx.fillText("fps: " + this.fps, 220,10);
+        }
         ctx.fillText("速度: " + this.mycar.currentSpeed(), 220,150);
         ctx.fillText("距离:" + this.mycar.currentDistance(), 220,180);
         ctx.fillText("等级:" + this.traffic.level, 220,210);

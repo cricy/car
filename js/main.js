@@ -79,12 +79,40 @@ define(function(require) {
             }
         }
     }
+
+
     function draw(){
+        c.fps = fps;
         c.draw();
         if(!c.gameOver){
             requestAnimFrame(draw);
         }
+
+        fps_draw();
     }
+
+    var lastCalledTime;
+    var fps, tmpfps = [];
+    function fps_draw(){
+        if(!lastCalledTime) {
+            lastCalledTime = new Date().getTime();
+            fps = 0;
+            return;
+        }
+        var now = new Date().getTime()
+        delta = (now - lastCalledTime)/1000;
+        lastCalledTime = now;
+        tmpfps.push(1/delta);
+
+    }
+    setInterval(function(){
+        var all = 0;
+        tmpfps.forEach(function(t){
+            all += t;
+        })
+        fps = (all/tmpfps.length).toFixed(1);
+        tmpfps = [];
+    },1000)
 
     requestAnimFrame(draw);
 
@@ -92,8 +120,3 @@ define(function(require) {
 });
 
 
-
-document.addEventListener("DOMContentLoaded", function(){
-
-
-}, false);
